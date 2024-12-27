@@ -1,0 +1,60 @@
+# Etapa 1: Construção das dependências
+FROM python:3.11-slim-bookworm as requirements-stage
+
+WORKDIR /tmp
+
+# Atualiza o pip e instala o Poetry
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir poetry
+
+# Copia arquivos de dependências
+COPY pyproject.toml poetry.lock* /tmp/
+
+# Configura o Poetry para não criar ambientes virtuais
+ENV POETRY_VIRTUALENVS_CREATE=false
+
+# Garante que o lockfile está atualizado
+RUN poetry lock --no-cache
+
+# Exporta as dependências em formato requirements.txt
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --without dev
+
+
+# Etapa 2: Construção do ambiente de execução
+FROM python:3.11-slim-bookworm as build-stage
+
+# Copia as dependências geradas na etapa anterior
+COPY --from=requirements-stage /tmp/requirements.txt .
+
+# Atualiza o pip novamente
+RUN pip install --no-cache-dir --upgrade pip
+
+# Instala as dependências
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Cria um usuário para rodar o aplicativo
+RUN groupadd -g 999 appuser && \
+    useradd -r -u 999 -g appuser appuser
+USER appuser
+WORKDIR /home/appuser
+
+# Configura o PATH
+ENV PATH="/home/appuser/.local/bin:${PATH}"
+
+# Copia o código da aplicação
+COPY --chown=appuser:appuser . .
+
+# Metadados do container
+LABEL maintainer="Paulo Marvin <paulo.marving@gmail.com>" \
+      description="FastAPI Server" \
+      version="1.0"
+
+# Definição de variáveis de ambiente para o servidor
+ENV SERVER_PORT=8000
+ENV SERVER_HOST=0.0.0.0
+
+# Expõe a porta definida
+EXPOSE $SERVER_PORT
+
+# Comando de inicialização do servidor
+CMD uvicorn app.main:app --host $SERVER_HOST --port $SERVER_PORT
