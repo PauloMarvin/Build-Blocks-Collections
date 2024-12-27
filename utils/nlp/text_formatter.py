@@ -1,139 +1,145 @@
 import re
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 import spacy
 from spacy.matcher import Matcher
 import nltk
 
 
-class TextPreProcessor:
+class TextProcessor:
+    # Carrega o modelo SpaCy para português com recursos desabilitados
     nlp_object = spacy.load("pt_core_news_lg", disable=["parser", "ner", "tagger"])
     nlp_object.add_pipe("emoji", first=True)
 
+    # ======= Métodos para Processamento em Corpus =======
     @classmethod
-    def remove_with_regex_corpus(cls, corpus: List[str], regex_patterns: List[str]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__remove_with_regex(text, regex_patterns))
-        return formatted_corpus
-
-    @classmethod
-    def remove_with_prefixes_corpus(cls, corpus: List[str], prefixes: List[str]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__remove_with_prefixes(text, prefixes))
-        return formatted_corpus
+    def remove_sites_corpus(cls, corpus: List[str]) -> List[str]:
+        """Remove URLs do corpus."""
+        return [cls.remove_sites(text) for text in corpus]
 
     @classmethod
     def remove_punctuation_corpus(cls, corpus: List[str]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__remove_punctuation(text))
-        return formatted_corpus
+        """Remove pontuações do corpus."""
+        return [cls.remove_punctuation(text) for text in corpus]
 
     @classmethod
     def lower_text_corpus(cls, corpus: List[str]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__lower_text(text))
-        return formatted_corpus
+        """Converte texto para minúsculas no corpus."""
+        return [cls.lower_text(text) for text in corpus]
 
     @classmethod
     def remove_stopwords_corpus(cls, corpus: List[str]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__remove_stopwords(text))
-        return formatted_corpus
-
-    @classmethod
-    def remove_emojis_corpus(cls, corpus: List[str]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__remove_emojis(text))
-        return formatted_corpus
+        """Remove stopwords do corpus."""
+        return [cls.remove_stopwords(text) for text in corpus]
 
     @classmethod
     def lemmatization_corpus(cls, corpus: List[str]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__lemmatization(text))
-        return formatted_corpus
+        """Realiza lematização no corpus."""
+        return [cls.lemmatization(text) for text in corpus]
 
     @classmethod
     def steaming_corpus(cls, corpus: List[str]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__steaming(text))
-        return formatted_corpus
+        """Realiza stemming no corpus."""
+        return [cls.stemming(text) for text in corpus]
+
+    @classmethod
+    def remove_with_regex_corpus(cls, corpus: List[str], regex_patterns: List[str]) -> List[str]:
+        """Remove padrões regex do corpus."""
+        return [cls.remove_with_regex(text, regex_patterns) for text in corpus]
+
+    @classmethod
+    def remove_with_prefixes_corpus(cls, corpus: List[str], prefixes: List[str]) -> List[str]:
+        """Remove palavras que começam com prefixos especificados."""
+        return [cls.remove_with_prefixes(text, prefixes) for text in corpus]
+
+    @classmethod
+    def remove_emojis_corpus(cls, corpus: List[str]) -> List[str]:
+        """Remove emojis do corpus."""
+        return [cls.remove_emojis(text) for text in corpus]
 
     @classmethod
     def replace_matches_corpus(cls, corpus: List[str],
                                patterns_dict: Dict[str, List[List[Dict[str, Any]]]]) -> List[str]:
-        formatted_corpus = []
-        for text in corpus:
-            formatted_corpus.append(cls.__replace_matches(text, patterns_dict))
-        return formatted_corpus
+        """Substitui padrões definidos no corpus."""
+        return [cls.replace_matches(text, patterns_dict) for text in corpus]
 
+    # ======= Métodos Individuais =======
     @staticmethod
-    def __remove_with_regex(raw_text: str, regex_patterns: List[str]) -> str:
-        formatted_text = raw_text
-        for pattern in regex_patterns:
-            formatted_text = re.sub(pattern, '', formatted_text)
-        return " ".join(formatted_text.split())
-
-    @staticmethod
-    def __remove_with_prefixes(raw_text: str, prefixes: List[str]) -> str:
-        words = []
-        for word in raw_text.split():
-            word = word.strip()
-            if word:
-                if word[0] not in prefixes:
-                    words.append(word)
-        return " ".join(words)
+    def remove_sites(raw_text: str) -> str:
+        """Remove URLs do texto."""
+        formatted_text = re.sub(r'(?:https?://)?(?:www\.)?[\w-]+\.[\w.-]+[^\s]*', '', raw_text)
+        return ' '.join(formatted_text.split())
 
     @classmethod
-    def __remove_punctuation(cls, raw_text: str) -> str:
+    def remove_punctuation(cls, raw_text: str) -> str:
+        """Remove pontuações do texto."""
         doc = cls.nlp_object(raw_text)
-        formatted_text = " ".join([token.text for token in doc if not token.is_punct])
-        return formatted_text
+        return ' '.join([token.text for token in doc if not token.is_punct])
 
     @staticmethod
-    def __lower_text(raw_text: str) -> str:
+    def lower_text(raw_text: str) -> str:
+        """Converte texto para minúsculas."""
         return raw_text.lower()
 
     @classmethod
-    def __remove_stopwords(cls, raw_text: str) -> str:
+    def remove_stopwords(cls, raw_text: str) -> str:
+        """Remove stopwords do texto."""
         doc = cls.nlp_object(raw_text)
-        formatted_text = [token.text for token in doc if not token.is_stop]
-        return " ".join(formatted_text)
+        return ' '.join([token.text for token in doc if not token.is_stop])
 
     @classmethod
-    def __remove_emojis(cls, raw_text: str) -> str:
+    def lemmatization(cls, raw_text: str) -> str:
+        """Realiza lematização no texto."""
         doc = cls.nlp_object(raw_text)
-        formatted_text = [token.text for token in doc if not token._.is_emoji]
-        return " ".join(formatted_text)
-
-    @classmethod
-    def __lemmatization(cls, raw_text: str) -> str:
-        doc = cls.nlp_object(raw_text)
-        formatted_text = [token.lemma_ for token in doc]
-        return " ".join(formatted_text)
+        return ' '.join([token.lemma_ for token in doc])
 
     @staticmethod
-    def __steaming(raw_text: str) -> str:
+    def stemming(raw_text: str) -> str:
+        """Realiza stemming no texto."""
         stemmer = nltk.stem.RSLPStemmer()
-        formatted_text = [stemmer.stem(token) for token in raw_text.split()]
-        return " ".join(formatted_text)
+        return ' '.join([stemmer.stem(token) for token in raw_text.split()])
+
+    @staticmethod
+    def remove_with_regex(raw_text: str, regex_patterns: List[str]) -> str:
+        """Remove padrões regex do texto."""
+        formatted_text = raw_text
+        for pattern in regex_patterns:
+            formatted_text = re.sub(pattern, '', formatted_text)
+        return ' '.join(formatted_text.split())
+
+    @staticmethod
+    def remove_with_prefixes(raw_text: str, prefixes: List[str]) -> str:
+        """Remove palavras que começam com prefixos específicos."""
+        words = []
+        for word in raw_text.split():
+            if word and word[0] not in prefixes:
+                words.append(word)
+        return ' '.join(words)
 
     @classmethod
-    def __replace_matches(cls, raw_text: str, patterns_dict: Dict[str, List[List[Dict[str, Any]]]]) -> str:
+    def remove_emojis(cls, raw_text: str) -> str:
+        """Remove emojis do texto."""
+        doc = cls.nlp_object(raw_text)
+        return ' '.join([token.text for token in doc if not token._.is_emoji])
+
+    @classmethod
+    def replace_matches(cls, raw_text: str, patterns_dict: Dict[str, List[List[Dict[str, Any]]]]) -> str:
+        """Substitui padrões definidos no texto."""
         matcher = Matcher(cls.nlp_object.vocab)
         doc = cls.nlp_object(raw_text)
-        for key, value in patterns_dict.items():
+        for key, value in cls.__create_patterns_dict(patterns_dict).items():
             matcher.add(key, value)
         parsed_doc = doc.text
         for match_id, start, end in matcher(doc):
             string_id = cls.nlp_object.vocab.strings[match_id]
             span = doc[start:end]
             parsed_doc = parsed_doc.replace(span.text, string_id)
-
         return parsed_doc
+
+    @classmethod
+    def __create_patterns_dict(cls, patterns_data: Dict[str, List[List[Dict[str, Any]]]]) -> Dict[str, List[List[Dict[str, Any]]]]:
+        """Cria dicionário de padrões para Matcher."""
+        patterns_dict = {}
+        for pattern_name, emojis in patterns_data.items():
+            pattern_list = [[{'ORTH': emoji}] for emoji in emojis]
+            patterns_dict[pattern_name] = pattern_list
+        return patterns_dict
