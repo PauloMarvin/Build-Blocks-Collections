@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.utils import resample
 
 
 class DataframeUtilsNLP:
