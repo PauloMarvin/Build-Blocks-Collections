@@ -42,12 +42,16 @@ class TextProcessor:
         return [cls.stemming(text) for text in corpus]
 
     @classmethod
-    def remove_with_regex_corpus(cls, corpus: List[str], regex_patterns: List[str]) -> List[str]:
+    def remove_with_regex_corpus(
+        cls, corpus: List[str], regex_patterns: List[str]
+    ) -> List[str]:
         """Remove padrões regex do corpus."""
         return [cls.remove_with_regex(text, regex_patterns) for text in corpus]
 
     @classmethod
-    def remove_with_prefixes_corpus(cls, corpus: List[str], prefixes: List[str]) -> List[str]:
+    def remove_with_prefixes_corpus(
+        cls, corpus: List[str], prefixes: List[str]
+    ) -> List[str]:
         """Remove palavras que começam com prefixos especificados."""
         return [cls.remove_with_prefixes(text, prefixes) for text in corpus]
 
@@ -57,8 +61,9 @@ class TextProcessor:
         return [cls.remove_emojis(text) for text in corpus]
 
     @classmethod
-    def replace_matches_corpus(cls, corpus: List[str],
-                               patterns_dict: Dict[str, List[List[Dict[str, Any]]]]) -> List[str]:
+    def replace_matches_corpus(
+        cls, corpus: List[str], patterns_dict: Dict[str, List[List[Dict[str, Any]]]]
+    ) -> List[str]:
         """Substitui padrões definidos no corpus."""
         return [cls.replace_matches(text, patterns_dict) for text in corpus]
 
@@ -66,14 +71,16 @@ class TextProcessor:
     @staticmethod
     def remove_sites(raw_text: str) -> str:
         """Remove URLs do texto."""
-        formatted_text = re.sub(r'(?:https?://)?(?:www\.)?[\w-]+\.[\w.-]+[^\s]*', '', raw_text)
-        return ' '.join(formatted_text.split())
+        formatted_text = re.sub(
+            r"(?:https?://)?(?:www\.)?[\w-]+\.[\w.-]+[^\s]*", "", raw_text
+        )
+        return " ".join(formatted_text.split())
 
     @classmethod
     def remove_punctuation(cls, raw_text: str) -> str:
         """Remove pontuações do texto."""
         doc = cls.nlp_object(raw_text)
-        return ' '.join([token.text for token in doc if not token.is_punct])
+        return " ".join([token.text for token in doc if not token.is_punct])
 
     @staticmethod
     def lower_text(raw_text: str) -> str:
@@ -84,27 +91,27 @@ class TextProcessor:
     def remove_stopwords(cls, raw_text: str) -> str:
         """Remove stopwords do texto."""
         doc = cls.nlp_object(raw_text)
-        return ' '.join([token.text for token in doc if not token.is_stop])
+        return " ".join([token.text for token in doc if not token.is_stop])
 
     @classmethod
     def lemmatization(cls, raw_text: str) -> str:
         """Realiza lematização no texto."""
         doc = cls.nlp_object(raw_text)
-        return ' '.join([token.lemma_ for token in doc])
+        return " ".join([token.lemma_ for token in doc])
 
     @staticmethod
     def stemming(raw_text: str) -> str:
         """Realiza stemming no texto."""
         stemmer = nltk.stem.RSLPStemmer()
-        return ' '.join([stemmer.stem(token) for token in raw_text.split()])
+        return " ".join([stemmer.stem(token) for token in raw_text.split()])
 
     @staticmethod
     def remove_with_regex(raw_text: str, regex_patterns: List[str]) -> str:
         """Remove padrões regex do texto."""
         formatted_text = raw_text
         for pattern in regex_patterns:
-            formatted_text = re.sub(pattern, '', formatted_text)
-        return ' '.join(formatted_text.split())
+            formatted_text = re.sub(pattern, "", formatted_text)
+        return " ".join(formatted_text.split())
 
     @staticmethod
     def remove_with_prefixes(raw_text: str, prefixes: List[str]) -> str:
@@ -113,16 +120,18 @@ class TextProcessor:
         for word in raw_text.split():
             if word and word[0] not in prefixes:
                 words.append(word)
-        return ' '.join(words)
+        return " ".join(words)
 
     @classmethod
     def remove_emojis(cls, raw_text: str) -> str:
         """Remove emojis do texto."""
         doc = cls.nlp_object(raw_text)
-        return ' '.join([token.text for token in doc if not token._.is_emoji])
+        return " ".join([token.text for token in doc if not token._.is_emoji])
 
     @classmethod
-    def replace_matches(cls, raw_text: str, patterns_dict: Dict[str, List[List[Dict[str, Any]]]]) -> str:
+    def replace_matches(
+        cls, raw_text: str, patterns_dict: Dict[str, List[List[Dict[str, Any]]]]
+    ) -> str:
         """Substitui padrões definidos no texto."""
         matcher = Matcher(cls.nlp_object.vocab)
         doc = cls.nlp_object(raw_text)
@@ -136,10 +145,12 @@ class TextProcessor:
         return parsed_doc
 
     @classmethod
-    def __create_patterns_dict(cls, patterns_data: Dict[str, List[List[Dict[str, Any]]]]) -> Dict[str, List[List[Dict[str, Any]]]]:
+    def __create_patterns_dict(
+        cls, patterns_data: Dict[str, List[List[Dict[str, Any]]]]
+    ) -> Dict[str, List[List[Dict[str, Any]]]]:
         """Cria dicionário de padrões para Matcher."""
         patterns_dict = {}
         for pattern_name, emojis in patterns_data.items():
-            pattern_list = [[{'ORTH': emoji}] for emoji in emojis]
+            pattern_list = [[{"ORTH": emoji}] for emoji in emojis]
             patterns_dict[pattern_name] = pattern_list
         return patterns_dict
