@@ -6,11 +6,9 @@ import nltk
 
 
 class TextProcessor:
-    # Carrega o modelo SpaCy para português com recursos desabilitados
     nlp_object = spacy.load("pt_core_news_lg", disable=["parser", "ner", "tagger"])
     nlp_object.add_pipe("emoji", first=True)
 
-    # ======= Métodos para Processamento em Corpus =======
     @classmethod
     def remove_sites_corpus(cls, corpus: List[str]) -> List[str]:
         """Remove URLs do corpus."""
@@ -67,7 +65,6 @@ class TextProcessor:
         """Substitui padrões definidos no corpus."""
         return [cls.replace_matches(text, patterns_dict) for text in corpus]
 
-    # ======= Métodos Individuais =======
     @staticmethod
     def remove_sites(raw_text: str) -> str:
         """Remove URLs do texto."""
